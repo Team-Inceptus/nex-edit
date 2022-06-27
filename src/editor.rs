@@ -2,6 +2,9 @@ use crossterm::event::{Event, KeyCode, KeyEvent};
 use crossterm::{event, execute, terminal, cursor};
 use crossterm::terminal::ClearType;
 use std::io::{Write, stdout};
+use core::time::Duration;
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 
 pub struct Editor {
@@ -12,15 +15,19 @@ pub struct Editor {
 }
 
 
-fn clear_screen() {
-    execute!(stdout(), terminal::Clear(ClearType::All));
+pub fn clear_screen() {
+    execute!(stdout(), terminal::Clear(ClearType::All)).unwrap();
+    move_cursor(0, 0);
+}
+
+fn move_cursor(x: u16, y: u16) {
+    execute!(stdout(), cursor::MoveTo(x, y)).unwrap();
 }
 
 
 impl Editor {
     pub fn new() -> Self {
         clear_screen();
-        execute!(stdout(), cursor::MoveTo(0, 0));
 
         let win_size = terminal::size()
             .map(|(x, y)| (x as usize, y as usize))
@@ -34,8 +41,9 @@ impl Editor {
         }
     }
 
-    fn update_cursor(&self) -> crossterm::Result<()> {
-        execute!(stdout(), cursor::MoveTo(self.x, self.y))
+    // Updates cursor to cursor x and cursor y.
+    fn update_cursor(&self) {
+        move_cursor(self.x, self.y);
     }
 
     // Decrements cursor position.
@@ -62,13 +70,40 @@ impl Editor {
         self.update_cursor();
     }
 
+    // Makes a newline.
     fn newline(&mut self) {
         self.y += 1;
         self.x = 0;
         self.update_cursor();
     }
 
+    fn show_start_screen(&self) {
+        let version: String = String::from(VERSION);
+        move_cursor((self.max_x - version.len() as u16) / 3, 2);
+        println!("{}", format!("NexEdit - {}", VERSION));
+
+        loop {
+            if event::poll(Duration::from_millis(500)).unwrap()  {
+                clear_screen();
+                move_cursor(0, 0);
+                break;
+            }
+        }
+
+        self.draw_rows();
+        move_cursor(0, 0);          // Bring cursor back up.
+    }
+
+    // Draws '~'
+    fn draw_rows(&self) {
+        for i in 1..self.max_y {
+            println!("~\r");
+        }
+    }
+
     pub fn run(&mut self) {
+        self.show_start_screen();
+
         loop {
             if let Event::Key(event) = event::read().expect("Failed to read key.") { 
                 match event {
@@ -81,7 +116,7 @@ impl Editor {
                         code: KeyCode::Enter,
                         modifiers: event::KeyModifiers::NONE
                     } => {
-                        print!("\r \n");
+                        print!("\r\n ");
                         self.newline();
                     }
 
@@ -91,11 +126,12 @@ impl Editor {
                     } => self.dec_cursor_pos(),
 
                     _ => {
-                        self.inc_cursor_pos();
                         if let KeyCode::Char(c) = event.code {
                             print!("{}", c);
-                            stdout().flush();               // Flush to terminal.
+                            stdout().flush().unwrap();               // Flush to terminal.
                         }
+
+                        self.inc_cursor_pos();
                     }
                 }
             }
