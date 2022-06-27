@@ -14,6 +14,8 @@ pub fn clear_screen() -> crossterm::Result<()> {
 pub struct Editor {
     reader: Reader,
     window_size: (usize, usize),
+    x: u16,
+    y: u16
 }
 
 
@@ -26,6 +28,8 @@ impl Editor {
         Self { 
             reader: Reader, 
             window_size: win_size,
+            x: 0,
+            y: 0
         }
     }
 
@@ -47,9 +51,14 @@ impl Editor {
         }
     } 
 
+    fn move_cursor(x: u16, y: u16) {
+        execute!(stdout(), cursor::MoveTo(x, y)).unwrap();
+    }
+
     pub fn run(&self) -> crossterm::Result<bool> {
         clear_screen().unwrap();
         self.draw_rows();
+        Self::move_cursor(self.x, self.y);
         self.process_keystroke()
     }
 }
