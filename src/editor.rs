@@ -6,7 +6,7 @@ use crossterm::terminal::ClearType;
 use std::io::stdout;
 
 
-fn clear_screen() -> crossterm::Result<()> {
+pub fn clear_screen() -> crossterm::Result<()> {
     execute!(stdout(), terminal::Clear(ClearType::All))?;
     execute!(stdout(), cursor::MoveTo(0, 0))
 }

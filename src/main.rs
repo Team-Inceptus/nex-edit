@@ -10,6 +10,7 @@ struct CleanUp;
 // out of scope.
 impl Drop for CleanUp {
     fn drop(&mut self) {
+        editor::clear_screen();
         terminal::disable_raw_mode().expect("Failed to turn off raw mode :(");
     }
 }
