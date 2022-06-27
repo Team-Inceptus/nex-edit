@@ -1,6 +1,5 @@
 use crate::reader::Reader;
-use crossterm::event::{Event, KeyCode, KeyEvent};
-use crossterm::event::*;
+use crossterm::event::{KeyCode, KeyEvent};
 use crossterm::{cursor, event, execute, terminal};
 use crossterm::terminal::ClearType;
 use std::io::stdout;
@@ -14,7 +13,7 @@ pub fn clear_screen() -> crossterm::Result<()> {
 
 pub struct Editor {
     reader: Reader,
-    window_size: (usize, usize)
+    window_size: (usize, usize),
 }
 
 
@@ -24,7 +23,10 @@ impl Editor {
             .map(|(x, y)| (x as usize, y as usize))
             .unwrap();
 
-        Self { reader: Reader, window_size: win_size }
+        Self { 
+            reader: Reader, 
+            window_size: win_size,
+        }
     }
 
     fn process_keystroke(&self) -> crossterm::Result<bool> {
@@ -40,13 +42,13 @@ impl Editor {
     }
 
     fn draw_rows(&self) {
-        for row in 0..self.window_size.0 {
+        for _ in 0..self.window_size.0 {
             println!("~\r");
         }
-    }
+    } 
 
     pub fn run(&self) -> crossterm::Result<bool> {
-        clear_screen();
+        clear_screen().unwrap();
         self.draw_rows();
         self.process_keystroke()
     }

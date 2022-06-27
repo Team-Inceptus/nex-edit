@@ -1,5 +1,5 @@
-use crossterm::event::{Event, KeyCode, KeyEvent};
-use crossterm::{event, terminal};
+use crossterm::event::{KeyEvent, Event};
+use crossterm::event;
 
 pub struct Reader;
 
